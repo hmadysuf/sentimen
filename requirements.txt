@@ -1,0 +1,13 @@
+Flask>=3.1.0
+numpy>=2.3.4
+scikit-learn>=1.7.2
+nltk>=3.9.2
+Sastrawi==1.0.1
+google-api-python-client>=2.180.0
+google-auth-oauthlib>=1.2.2
+google-auth-httplib2>=0.2.0
+matplotlib>=3.10.7
+seaborn>=0.13.2
+joblib>=1.5.2
+python-dotenv>=1.1.1
+wordcloud>=1.9.4

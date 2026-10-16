@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard Analisis Sentimen Kebijakan MBG</h2>
+<p class="text-muted">Sumber data: Komentar YouTube tentang Makan Bergizi Gratis</p>
+
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card text-white bg-primary mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Total Komentar</h5>
+        <h2>{{ total }}</h2>
+      </div>
+    </div>
+  </div>
+  {% for label, count in dist.items() %}
+  <div class="col-md-3">
+    <div class="card text-white mb-3
+      {% if label == 'positif' %}bg-success{% elif label == 'negatif' %}bg-danger{% else %}bg-secondary{% endif %}">
+      <div class="card-body">
+        <h5 class="card-title">{{ label|capitalize }}</h5>
+        <h2>{{ count }}</h2>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if has_data %}
+<div class="card mt-3">
+  <div class="card-body">
+    <h5>Grafik Distribusi Sentimen</h5>
+    <img src="{{ url_for('static', filename='charts/distribusi.png') }}?v={{ range(1,9999)|random }}"
+         class="img-fluid" alt="Distribusi Sentimen">
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info mt-3">
+  Belum ada data. Mulai dari menu <a href="{{ url_for('crawl') }}">Crawling</a>.
+</div>
+{% endif %}
+
+{% if metrics %}
+<div class="card mt-3">
+  <div class="card-body">
+    <h5>Ringkasan Performa Model</h5>
+    <table class="table table-striped">
+      <thead><tr><th>Model</th><th>Accuracy</th><th>Precision (macro)</th><th>Recall (macro)</th><th>F1 (macro)</th></tr></thead>
+      <tbody>
+        {% for name, m in metrics.items() %}
+          {% if name != 'dataset_info' %}
+          <tr>
+            <td>{{ name.replace('_',' ')|title }}</td>
+            <td>{{ m.accuracy }}</td>
+            <td>{{ m.precision_macro }}</td>
+            <td>{{ m.recall_macro }}</td>
+            <td><b>{{ m.f1_macro }}</b></td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

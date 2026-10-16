@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Analisis Sentimen dari URL YouTube</h2>
+<p class="text-muted">Masukkan link video YouTube. Sistem akan mengambil
+<b>komentar top-level</b> dan <b>reply</b>-nya, lalu menganalisis sentimennya.</p>
+
+<form method="POST" class="card card-body mb-4">
+  <div class="mb-3">
+    <label class="form-label">URL Video YouTube</label>
+    <input type="text" name="youtube_url" class="form-control"
+           placeholder="https://www.youtube.com/watch?v=XXXX"
+           value="{{ result.url if result else '' }}" required>
+  </div>
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Maks. Halaman Komentar (100/hal)</label>
+      <input type="number" name="max_pages" class="form-control" value="5" min="1" max="20">
+    </div>
+    <div class="col-md-4 mb-3 d-flex align-items-end">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="include_replies" id="incRep" checked>
+        <label class="form-check-label" for="incRep">Termasuk Reply Komentar</label>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 d-flex align-items-end">
+      <button class="btn btn-primary w-100" type="submit">Analisis Sekarang</button>
+    </div>
+  </div>
+</form>
+
+{% if result %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h5>{{ result.video.title }}</h5>
+    <p class="text-muted mb-1">Channel: <b>{{ result.video.channel }}</b></p>
+    <a href="{{ result.video.url }}" target="_blank" class="btn btn-sm btn-outline-danger">
+      Buka di YouTube
+    </a>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-3">
+    <div class="card text-white bg-primary"><div class="card-body">
+      <h6>Total Teks Dianalisis</h6><h3>{{ result.total }}</h3>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-info"><div class="card-body">
+      <h6>Komentar Top-Level</h6><h3>{{ result.total_comment }}</h3>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-warning"><div class="card-body">
+      <h6>Reply Komentar</h6><h3>{{ result.total_reply }}</h3>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-dark"><div class="card-body">
+      <h6>Sentimen Dominan</h6>
+      <h3>{{ result.dist_all|dictsort(by='value')|last|first|default('-') }}</h3>
+    </div></div>
+  </div>
+</div>
+
+{% if result.total > 0 %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3"><div class="card-body">
+      <h6>Distribusi Sentimen Keseluruhan</h6>
+      <img src="{{ url_for('static', filename='charts/distribusi_url.png') }}?v={{ range(1,9999)|random }}"
+           class="img-fluid">
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3"><div class="card-body">
+      <h6>Perbandingan Komentar vs Reply</h6>
+      <img src="{{ url_for('static', filename='charts/comment_vs_reply.png') }}?v={{ range(1,9999)|random }}"
+           class="img-fluid">
+    </div></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3"><div class="card-body">
+      <h6>Sentimen Komentar Top-Level</h6>
+      <ul class="list-group">
+        {% for k, v in result.dist_comment.items() %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span>{{ k|capitalize }}</span><b>{{ v }}</b>
+        </li>
+        {% endfor %}
+      </ul>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3"><div class="card-body">
+      <h6>Sentimen Reply Komentar</h6>
+      <ul class="list-group">
+        {% for k, v in result.dist_reply.items() %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span>{{ k|capitalize }}</span><b>{{ v }}</b>
+        </li>
+        {% endfor %}
+      </ul>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4"><div class="card-body">
+  <h6>Contoh Komentar & Reply dengan Sentimennya</h6>
+  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+    <table class="table table-sm table-striped">
+      <thead><tr>
+        <th>Tipe</th><th>Komentar</th><th>Sentimen</th><th>Skor</th><th>Likes</th>
+      </tr></thead>
+      <tbody>
+      {% for s in result.samples %}
+        <tr>
+          <td>
+            {% if s.type == 'reply' %}
+              <span class="badge bg-warning text-dark">Reply</span>
+            {% else %}
+              <span class="badge bg-info">Komentar</span>
+            {% endif %}
+          </td>
+          <td>{{ s.comment_text[:150] }}{% if s.comment_text|length > 150 %}...{% endif %}</td>
+          <td>
+            {% if s.label == 'positif' %}<span class="badge bg-success">positif</span>
+            {% elif s.label == 'negatif' %}<span class="badge bg-danger">negatif</span>
+            {% else %}<span class="badge bg-secondary">netral</span>{% endif %}
+          </td>
+          <td>{{ s.score }}</td>
+          <td>{{ s.like_count }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endif %}
+{% endblock %}
